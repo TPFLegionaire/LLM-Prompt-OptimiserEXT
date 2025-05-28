@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Validate Extension Structure
+      run: |
+        if [ ! -f "manifest.json" ]; then
+          echo "Error: manifest.json not found"
+          exit 1
+        fi
+        if [ ! -f "popup.html" ]; then
+          echo "Error: popup.html not found"
+          exit 1
+        fi
+        echo "Basic validation passed"

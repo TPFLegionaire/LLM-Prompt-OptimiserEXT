@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "LLM Prompt Optimizer",
+  "version": "1.0",
+  "description": "Transforms basic requests into well-crafted prompts for LLMs",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "clipboardWrite",
+    "storage"
+  ]
+}

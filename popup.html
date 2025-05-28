@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Prompt Optimizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>LLM Prompt Optimizer</h1>
+    
+    <div class="input-section">
+      <label for="userRequest">Enter your request:</label>
+      <textarea id="userRequest" placeholder="E.g., Tell me about climate change"></textarea>
+    </div>
+    
+    <div class="options-section">
+      <div class="llm-select">
+        <label for="llmType">Target LLM:</label>
+        <select id="llmType">
+          <option value="gpt4">GPT-4</option>
+          <option value="claude">Claude</option>
+          <option value="gemini">Gemini</option>
+          <option value="general">General Purpose</option>
+        </select>
+      </div>
+      
+      <div class="prompt-type">
+        <label for="promptType">Prompt Type:</label>
+        <select id="promptType">
+          <option value="general">General Query</option>
+          <option value="analysis">Analysis/Research</option>
+          <option value="creative">Creative Writing</option>
+          <option value="coding">Code/Technical</option>
+          <option value="summary">Summarization</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="actions-section">
+      <button id="optimizeBtn">Optimize Prompt</button>
+    </div>
+    
+    <div class="output-section">
+      <label for="optimizedPrompt">Optimized Prompt:</label>
+      <textarea id="optimizedPrompt" readonly></textarea>
+      <div class="copy-section">
+        <button id="copyBtn">Copy to Clipboard</button>
+        <span id="copyStatus" class="hidden">Copied!</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="prompt-templates.js"></script>
+  <script src="transformation-logic.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

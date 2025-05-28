@@ -1,0 +1,13 @@
+This is a placeholder file. In a real Chrome extension, you would include actual image files here for icons.
+
+For actual icon files, you would use images from the provided URLs:
+- https://images.unsplash.com/photo-1586374579358-9d19d632b6df (Blue and white robot figure)
+- https://images.unsplash.com/photo-1620712943543-bcc4688e7485 (Robot toy)
+- https://images.unsplash.com/photo-1637519291421-25c77a587562 (Blue button with arrow)
+
+These would need to be downloaded and resized to:
+- icon16.png (16x16)
+- icon48.png (48x48)
+- icon128.png (128x128)
+
+And placed in this directory.

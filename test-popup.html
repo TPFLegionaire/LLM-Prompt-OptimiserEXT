@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Prompt Optimizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>LLM Prompt Optimizer</h1>
+    
+    <div class="input-section">
+      <label for="userRequest">Enter your request:</label>
+      <textarea id="userRequest" placeholder="E.g., Tell me about climate change"></textarea>
+    </div>
+    
+    <div class="options-section">
+      <div class="llm-select">
+        <label for="llmType">Target LLM:</label>
+        <select id="llmType">
+          <option value="gpt4">GPT-4</option>
+          <option value="claude">Claude</option>
+          <option value="gemini">Gemini</option>
+          <option value="general">General Purpose</option>
+        </select>
+      </div>
+      
+      <div class="prompt-type">
+        <label for="promptType">Prompt Type:</label>
+        <select id="promptType">
+          <option value="general">General Query</option>
+          <option value="analysis">Analysis/Research</option>
+          <option value="creative">Creative Writing</option>
+          <option value="coding">Code/Technical</option>
+          <option value="summary">Summarization</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="actions-section">
+      <button id="optimizeBtn">Optimize Prompt</button>
+    </div>
+    
+    <div class="output-section">
+      <label for="optimizedPrompt">Optimized Prompt:</label>
+      <textarea id="optimizedPrompt" readonly></textarea>
+      <div class="copy-section">
+        <button id="copyBtn">Copy to Clipboard</button>
+        <span id="copyStatus" class="hidden">Copied!</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="prompt-templates.js"></script>
+  <script src="transformation-logic.js"></script>
+  <script>
+    // Modified popup script for testing without Chrome extension APIs
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get elements
+      const userRequestInput = document.getElementById('userRequest');
+      const optimizedPromptOutput = document.getElementById('optimizedPrompt');
+      const optimizeButton = document.getElementById('optimizeBtn');
+      const copyButton = document.getElementById('copyBtn');
+      const copyStatus = document.getElementById('copyStatus');
+      const llmTypeSelect = document.getElementById('llmType');
+      const promptTypeSelect = document.getElementById('promptType');
+      
+      // Mock chrome.storage for testing
+      const mockStorage = {
+        sync: {
+          get: function(keys, callback) {
+            // Return default values for testing
+            callback({});
+          },
+          set: function(data) {
+            console.log('Would save to storage:', data);
+          }
+        }
+      };
+      
+      // Handle optimize button click
+      optimizeButton.addEventListener('click', function() {
+        const userRequest = userRequestInput.value;
+        const promptType = promptTypeSelect.value;
+        const llmType = llmTypeSelect.value;
+        
+        console.log('Optimizing request:', { userRequest, promptType, llmType });
+        
+        // Save preferences (mock)
+        mockStorage.sync.set({ 
+          llmType: llmType,
+          promptType: promptType 
+        });
+        
+        // Transform the request
+        const optimizedPrompt = transformRequest(userRequest, promptType, llmType);
+        
+        // Display the result
+        optimizedPromptOutput.value = optimizedPrompt;
+        console.log('Generated optimized prompt:', optimizedPrompt);
+      });
+      
+      // Handle copy button click
+      copyButton.addEventListener('click', function() {
+        // Copy to clipboard using modern API
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(optimizedPromptOutput.value).then(function() {
+            console.log('Copied to clipboard successfully');
+            showCopyConfirmation();
+          }).catch(function(err) {
+            console.error('Failed to copy to clipboard:', err);
+            // Fallback to old method
+            fallbackCopy();
+          });
+        } else {
+          // Fallback for older browsers
+          fallbackCopy();
+        }
+      });
+      
+      function fallbackCopy() {
+        optimizedPromptOutput.select();
+        try {
+          document.execCommand('copy');
+          console.log('Copied using fallback method');
+          showCopyConfirmation();
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
+        }
+      }
+      
+      function showCopyConfirmation() {
+        // Show confirmation
+        copyStatus.classList.remove('hidden');
+        
+        // Hide confirmation after 2 seconds
+        setTimeout(function() {
+          copyStatus.classList.add('hidden');
+        }, 2000);
+      }
+      
+      // Auto-resize textareas
+      function autoResizeTextarea(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+      }
+      
+      userRequestInput.addEventListener('input', function() {
+        autoResizeTextarea(this);
+      });
+      
+      // Initialize with a placeholder optimization if needed
+      if (userRequestInput.value) {
+        optimizeButton.click();
+      }
+      
+      console.log('Test popup initialized successfully');
+    });
+  </script>
+</body>
+</html>
