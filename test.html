@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Prompt Optimizer Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    
+    h1 {
+      color: #2563eb;
+    }
+    
+    .test-container {
+      background-color: white;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      margin-top: 10px;
+      font-family: monospace;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    
+    .log {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>LLM Prompt Optimizer Test</h1>
+  
+  <div class="test-container">
+    <h2>Input</h2>
+    <input type="text" id="testInput" value="Tell me about UFO" style="width: 100%; padding: 8px;">
+    <select id="promptType" style="margin-top: 10px; padding: 8px;">
+      <option value="general">General Query</option>
+      <option value="analysis">Analysis/Research</option>
+      <option value="creative">Creative Writing</option>
+      <option value="coding">Code/Technical</option>
+      <option value="summary">Summarization</option>
+    </select>
+    <select id="llmType" style="margin-top: 10px; padding: 8px;">
+      <option value="gpt4">GPT-4</option>
+      <option value="claude">Claude</option>
+      <option value="gemini">Gemini</option>
+      <option value="general">General Purpose</option>
+    </select>
+    <button id="testButton">Run Test</button>
+  </div>
+  
+  <div class="test-container">
+    <h2>Output</h2>
+    <textarea id="output" readonly></textarea>
+  </div>
+  
+  <div class="test-container">
+    <h2>Console Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+  
+  <script>
+    // Mock console for logging
+    const originalConsole = console;
+    const logElement = document.getElementById('log');
+    
+    console = {
+      log: function(...args) {
+        originalConsole.log(...args);
+        logElement.textContent += '> ' + args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg) : arg
+        ).join(' ') + '\n';
+        logElement.scrollTop = logElement.scrollHeight;
+      },
+      error: function(...args) {
+        originalConsole.error(...args);
+        logElement.textContent += '! ERROR: ' + args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg) : arg
+        ).join(' ') + '\n';
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+    };
+    
+    // Manual definition of templates for testing
+    const promptTemplates = {
+      general: {
+        prefix: "I need detailed and accurate information about the following topic:",
+        rolePrompt: "You are a knowledgeable expert with comprehensive understanding of diverse topics.",
+        formatGuide: `Please structure your response with:
+- Clear definitions of key terms
+- Important context and background
+- Current understanding or state of knowledge
+- Different perspectives or viewpoints where relevant
+- Practical applications or implications
+- Sources or references where appropriate`,
+        thinkingPrompt: "Think step by step and provide a comprehensive response."
+      },
+      analysis: {
+        prefix: "Analyze the following topic in depth:",
+        rolePrompt: "You are an analytical expert with skills in critical thinking and research methodology.",
+        formatGuide: `Please structure your analysis with:
+- Initial problem/question framing
+- Methodology or approach to analysis
+- Key findings with supporting evidence
+- Alternative interpretations or counterarguments
+- Limitations of the analysis
+- Conclusions and implications
+- References or sources`,
+        thinkingPrompt: "Use analytical thinking and consider multiple perspectives. Evaluate evidence carefully and avoid unfounded claims."
+      },
+      creative: {
+        prefix: "Create the following type of content:",
+        rolePrompt: "You are a creative writer with expertise in storytelling and engaging content creation.",
+        formatGuide: `Consider including:
+- Engaging hooks or openings
+- Vivid descriptions and sensory details
+- Well-developed characters or concepts
+- Coherent narrative or logical flow
+- Appropriate tone and style for the content type
+- Memorable conclusion or ending`,
+        thinkingPrompt: "Be imaginative while maintaining coherence and purpose. Consider what would most engage the target audience."
+      },
+      coding: {
+        prefix: "Provide code or technical assistance for the following:",
+        rolePrompt: "You are an experienced software developer with expertise in multiple programming languages and technical systems.",
+        formatGuide: `Please include:
+- Clear explanation of the approach or solution
+- Well-commented, working code examples
+- Explanation of key concepts or functions
+- Potential edge cases or limitations
+- Best practices and optimization tips
+- Resources for further learning`,
+        thinkingPrompt: "Consider efficiency, readability, and best practices. Explain your reasoning for implementation choices."
+      },
+      summary: {
+        prefix: "Summarize the following information:",
+        rolePrompt: "You are an expert in information synthesis and clear communication.",
+        formatGuide: `Your summary should include:
+- Key points or main ideas
+- Important supporting details
+- Relationships between concepts
+- Significance or implications
+- Areas of uncertainty or debate (if relevant)`,
+        thinkingPrompt: "Identify the most important elements while maintaining accuracy. Avoid adding information not present in the original."
+      }
+    };
+
+    const llmAdjustments = {
+      gpt4: {
+        additionalPrompts: "Take a deep breath and work on this step by step.",
+        formatPreference: "Markdown formatting preferred."
+      },
+      claude: {
+        additionalPrompts: "Let's think about this carefully and consider multiple perspectives.",
+        formatPreference: "Use clear headings and bullet points for better readability."
+      },
+      gemini: {
+        additionalPrompts: "Analyze the request thoroughly before providing your response.",
+        formatPreference: "Structure your response with clear sections and logical progression."
+      },
+      general: {
+        additionalPrompts: "Consider this request carefully before responding.",
+        formatPreference: "Organize your response in a clear, readable format."
+      }
+    };
+
+    // Analyze the request
+    function analyzeRequest(request) {
+      console.log('Analyzing request:', request);
+      
+      const enhancements = {
+        needsContext: false,
+        needsSpecificity: false,
+        needsOutputFormat: false,
+        isComplex: false
+      };
+      
+      // Check if request is very short (likely needs context)
+      if (request.split(" ").length < 7) {
+        enhancements.needsContext = true;
+      }
+      
+      // Check if request contains vague terms that need specificity
+      const vagueTerms = ["good", "best", "better", "nice", "great", "interesting", "detailed"];
+      if (vagueTerms.some(term => request.toLowerCase().includes(term))) {
+        enhancements.needsSpecificity = true;
+      }
+      
+      // Check if request mentions output but doesn't specify format
+      if (request.toLowerCase().includes("output") || 
+          request.toLowerCase().includes("format") || 
+          request.toLowerCase().includes("result")) {
+        if (!request.toLowerCase().includes("format as") && 
+            !request.toLowerCase().includes("in the form") &&
+            !request.toLowerCase().includes("structured as")) {
+          enhancements.needsOutputFormat = true;
+        }
+      }
+      
+      // Check if request is complex (contains multiple questions/tasks)
+      if (request.includes(",") && 
+          (request.includes("and") || request.includes("also") || request.includes("additionally"))) {
+        enhancements.isComplex = true;
+      }
+      
+      console.log('Analysis result:', enhancements);
+      return enhancements;
+    }
+
+    // Build the prompt
+    function buildPrompt(request, template, llmAdjustment, enhancements) {
+      console.log('Building prompt with:', { 
+        request, 
+        templateType: template.prefix.substring(0, 20) + '...',
+        llmAdjustment: llmAdjustment.additionalPrompts.substring(0, 20) + '...',
+        enhancements 
+      });
+      
+      // Start with the role prompt
+      let optimizedPrompt = template.rolePrompt + "\n\n";
+      
+      // Add the task prefix and the original request
+      optimizedPrompt += template.prefix + "\n" + request + "\n\n";
+      
+      // Add context enhancement if needed
+      if (enhancements.needsContext) {
+        optimizedPrompt += "Please provide comprehensive information about this topic, including relevant context, background, and current developments.\n\n";
+      }
+      
+      // Add specificity enhancement if needed
+      if (enhancements.needsSpecificity) {
+        optimizedPrompt += "Be specific and precise in your response, with concrete examples and evidence where appropriate.\n\n";
+      }
+      
+      // Add formatting guidelines
+      optimizedPrompt += "Output format:\n" + template.formatGuide + "\n\n";
+      
+      // Add thinking prompt
+      optimizedPrompt += template.thinkingPrompt + "\n\n";
+      
+      // Add LLM-specific adjustments
+      optimizedPrompt += llmAdjustment.additionalPrompts + "\n";
+      optimizedPrompt += llmAdjustment.formatPreference;
+      
+      // Add complexity handling if needed
+      if (enhancements.isComplex) {
+        optimizedPrompt += "\n\nSince this is a complex request with multiple components, please address each part systematically and ensure all aspects are covered.";
+      }
+      
+      return optimizedPrompt;
+    }
+
+    // Main transformation function
+    function transformRequest(request, promptType, llmType) {
+      console.log('Transform request called with:', { request, promptType, llmType });
+      
+      // Basic validation
+      if (!request || request.trim() === "") {
+        return "Please enter a request to optimize.";
+      }
+      
+      // Clean up the request
+      const cleanRequest = request.trim();
+      
+      // Get the appropriate templates
+      const template = promptTemplates[promptType] || promptTemplates.general;
+      const llmAdjustment = llmAdjustments[llmType] || llmAdjustments.general;
+      
+      console.log('Templates found:', { 
+        template: !!template, 
+        llmAdjustment: !!llmAdjustment 
+      });
+      
+      // Analyze request to determine specific enhancements needed
+      const enhancements = analyzeRequest(cleanRequest);
+      
+      // Build the optimized prompt
+      let optimizedPrompt = buildPrompt(cleanRequest, template, llmAdjustment, enhancements);
+      
+      console.log('Generated prompt length:', optimizedPrompt.length);
+      return optimizedPrompt;
+    }
+
+    // Add event listener to test button
+    document.getElementById('testButton').addEventListener('click', function() {
+      console.log('=== TEST STARTED ===');
+      
+      const input = document.getElementById('testInput').value;
+      const promptType = document.getElementById('promptType').value;
+      const llmType = document.getElementById('llmType').value;
+      
+      try {
+        const result = transformRequest(input, promptType, llmType);
+        document.getElementById('output').value = result;
+        console.log('Test completed successfully');
+      } catch (error) {
+        console.error('Test failed:', error);
+        document.getElementById('output').value = 'ERROR: ' + error.message;
+      }
+    });
+    
+    // Run a test automatically on page load
+    window.addEventListener('load', function() {
+      console.log('Page loaded, running initial test');
+      document.getElementById('testButton').click();
+    });
+  </script>
+</body>
+</html>
