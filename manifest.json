@@ -4,15 +4,22 @@
   "version": "1.0.0",
   "description": "Transforms basic requests into well-crafted prompts for LLMs",
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
   },
   "permissions": [
     "clipboardWrite",
     "storage"
   ],
   "author": "TPFLegionaire",
-  "homepage_url": "https://github.com/TPFLegionaire/LLM-Prompt-OptimiserEXT",
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  "homepage_url": "https://github.com/TPFLegionaire/LLM-Prompt-OptimiserEXT"
 }
